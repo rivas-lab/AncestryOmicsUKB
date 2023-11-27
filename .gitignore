@@ -1,0 +1,6 @@
+# Ignore data directory
+data/
+# Ignore notebooks directory
+notebooks/
+# Ignore .ipynb_checkpoints directory
+.ipynb_checkpoints/
