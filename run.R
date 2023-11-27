@@ -1,5 +1,5 @@
 source('src/sampling.R')
-source('constants.R')
+source('src/constants.R')
 source('src/statistics.R')
 source('src/preprocess.R')
 source('src/fit.R')
@@ -26,8 +26,8 @@ for (disease in DISEASE_CODES) {
         prepared_data$prs, use_prs=TRUE, prepared_data$demo, use_demo=TRUE)
     
     sampled_data        <- sample_data(preprocessed_data, 'under_sampling')
-    system.time({cv_fit <- fit_models(model_dir_path, disease, preprocessed_data, update_models=FALSE)})
-    
+    system.time({cv_fit <- fit_models(model_dir_path, disease, preprocessed_data, update_models=TRUE)})
+
     #i_1Std <- which(cv_fit$lambdaHat1Std == cv_fit$lambda)
     #coefs <- coef(cv_fit$glinternetFit)[[i_1Std]]
     

@@ -2,7 +2,7 @@ library(data.table)
 library(glinternet)
 
 fit_models <- function(model_dir_path, disease, preprocessed_data, update_models) {
-    
+
     cat('Disease : ', disease, '\n')
     model_path <- file.path(model_dir_path, paste0(disease, '.rds'))
     
