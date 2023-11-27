@@ -28,7 +28,7 @@ fit_models <- function(model_dir_path, disease, preprocessed_data, update_models
     cv_fit <- glinternet.cv(
         X_train, y_train, numLevels, nFolds = 3, 
         family='binomial', interactionCandidates=c(1,2,3,4),
-        nCores=10
+        numCores=10
     )    
 
     cat('Finished fitting model\n\n')

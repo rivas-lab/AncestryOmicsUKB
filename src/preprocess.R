@@ -73,6 +73,5 @@ preprocess_data <- function(populations, disease, pheno, meta, prs, use_prs, dem
     y_train <- y_train - 1
     y_test  <- y_test  - 1
     
-    print(X_train)
     return(list(X_train = X_train, y_train = y_train, X_test = X_test, y_test = y_test))
 }
