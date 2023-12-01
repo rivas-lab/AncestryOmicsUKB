@@ -29,7 +29,7 @@ prepare_data <- function(meta, prs, pheno) {
     return(list(meta = meta, pheno = pheno, demo = demo, prs = prs))
 }
 
-preprocess_data <- function(populations, disease, pheno, meta, prs, use_prs, demo, use_demo) {
+preprocess_data <- function(populations, disease, pheno, meta, prs, use_prs, demo, use_demo, only_wb_in_train) {
     
     set.seed(123)
 
@@ -41,13 +41,13 @@ preprocess_data <- function(populations, disease, pheno, meta, prs, use_prs, dem
         prs_column <- paste0('PRS_', disease)
         prs_subset <- subset(prs, population %in% populations, select = prs_column)
         X          <- cbind(prs_subset, X)
-        }
+    }
     
     # Add demographics columns to the X dataframe
     if (use_demo == TRUE) {
         demo_subset            <- subset(demo, population %in% populations)
         demo_subset$population <- NULL 
-        X           <- cbind(X, demo_subset)
+        X                      <- cbind(X, demo_subset)
     }
     
     # Ensure y only contains 1 or 2, and filter X accordingly
@@ -57,21 +57,45 @@ preprocess_data <- function(populations, disease, pheno, meta, prs, use_prs, dem
 
     X$population <- ifelse(X$population == "white_british", 0, ifelse(X$population == "s_asian", 1, NA))
         
-    y_train <- subset(y, final_split %in% c('train', 'val'))[[disease]]
-    y_test <- subset(y, final_split == 'test' & population == 's_asian')[[disease]]
+    if (only_wb_in_train) {
+        y_train <- subset(y, final_split %in% c('train', 'val') & population == 'white_british')[[disease]]
+        X_train <- subset(X, final_split %in% c('train', 'val') & population == 0)
+    } else {
+        y_train <- subset(y, final_split %in% c('train', 'val'))[[disease]]
+        X_train <- subset(X, final_split %in% c('train', 'val'))
+    }
 
-    X_train <- subset(X, final_split %in% c('train', 'val'))
-    X_test      <- subset(X, final_split == 'test' & population == 1)
+    y_test <- subset(y, final_split == 'test' & population == 's_asian')[[disease]]
+    X_test <- subset(X, final_split == 'test' & population == 1)
     
-    X_train$final_split     <- NULL
-    X_test$final_split      <- NULL
+    X_train$final_split <- NULL
+    X_test$final_split  <- NULL
 
     # Impute missing numeric values in training and testing sets
-    X_train     <- X_train %>% mutate(across(where(is.numeric), ~ifelse(is.na(.), mean(., na.rm = TRUE), .)))
-    X_test      <- X_test %>% mutate(across(where(is.numeric), ~ifelse(is.na(.), mean(., na.rm = TRUE), .)))
+    X_train <- X_train %>% mutate(across(where(is.numeric), ~ifelse(is.na(.), mean(., na.rm = TRUE), .)))
+    X_test  <- X_test %>% mutate(across(where(is.numeric), ~ifelse(is.na(.), mean(., na.rm = TRUE), .)))
 
     y_train <- y_train - 1
-    y_test  <- y_test  - 1
+    y_test  <- y_test - 1
     
+    print('Summary of population in X_train')
+    print(table(X_train$population))
+    
+    print('Summary of cases')
+    print_train_stats(X_train, y_train)
+
     return(list(X_train = X_train, y_train = y_train, X_test = X_test, y_test = y_test))
+}
+
+print_train_stats <- function(X_train, y_train) {
+    
+    combined_df          <- cbind(X_train, data.frame(y_train = y_train))
+    
+    combined_df$population <- ifelse(combined_df$population == 0, "WB", 
+                                     ifelse(combined_df$population == 1, "SA", NA))
+
+    combined_df$combined <- paste(combined_df$population, combined_df$y_train, sep = "-")
+    value_counts <- table(combined_df$combined)
+    print(value_counts)
+    
 }

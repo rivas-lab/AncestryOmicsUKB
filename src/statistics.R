@@ -1,4 +1,46 @@
-source('constants.R')
+library(pROC)
+
+source('src/constants.R')
+
+print_interactions_and_main_effects <- function(cv_fit, preprocessed_data) {
+    # Extracting the index where lambdaHat1Std equals lambda
+    i_1Std <- which(cv_fit$lambdaHat1Std == cv_fit$lambda)
+    coefs <- coef(cv_fit$glinternetFit)[[i_1Std]]
+
+    # Processing main effects
+    main_effects <- coefs$mainEffects$cont
+    cat('Main effects:\n')
+    for (effect in main_effects) {
+        col_index <- effect
+        print(colnames(preprocessed_data$X_train[, ..col_index]))
+    }
+
+    # Processing interactions
+    cat('\nInteractions:\n')
+    if (length(coefs$interactions$catcont) > 0) {
+        for (row in 1:nrow(coefs$interactions$catcont)) {
+            var_idx <- (coefs$interactions$catcont[row, 2])
+            print(colnames(preprocessed_data$X_train[, ..var_idx]))
+        }
+    }
+}
+
+compute_and_print_roc_auc <- function(cv_fit, preprocessed_data) {
+
+    X_test <- preprocessed_data$X_test
+    y_test <- preprocessed_data$y_test
+
+    predictions <- as.vector(predict(cv_fit, X_test, type = "response"))
+
+    roc_curve <- suppressMessages(roc(y_test, predictions, quietly = TRUE))
+    auc_score <- auc(roc_curve)
+    cat('\nAUC score: ', auc_score)
+    cat('\n\n####################################################################################################')
+    cat('\n####################################################################################################\n')
+
+    # Return the AUC score
+    return(auc_score)
+}
 
 cases_summary <- function(pheno) {
 
