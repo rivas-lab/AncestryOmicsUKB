@@ -24,26 +24,11 @@ fit_models <- function(model_dir_path, disease, preprocessed_data, update_models
     flush.console()
     
     if (model_desired == 'glinternet') { 
-        
-        num_cols <- ncol(X_train)
-        numLevels <- c(1, 1, 2, 2, rep(1, num_cols - 4))
-        
-        cv_fit <- glinternet.cv(
-        X_train, y_train, numLevels, nFolds = 3, 
-        family='binomial', interactionCandidates=c(1,2,3,4),
-        numCores=10
+        cv_fit <- fit_glinternet_cv(X_train, y_train, 3, 10)
     )
         
-    } else if (model_desired == 'l1_log_reg') { 
-        
-        X_train_matrix <- as.matrix(X_train)
-        
-        cv_fit <- cv.glmnet(
-            X_train_matrix, y_train, 
-            family = "binomial",
-            alpha = 1, 
-            nfolds = 3
-        )    
+    } else if (model_desired == 'l1_log_reg') {         
+        cv_fit <- fit_l1_log_reg(X_train, y_train, 3)    
     }
 
     cat('Finished fitting model\n\n')
@@ -52,3 +37,35 @@ fit_models <- function(model_dir_path, disease, preprocessed_data, update_models
     saveRDS(cv_fit, file.path(model_dir_path, paste0(disease, '.rds')))
     return (cv_fit)
 }
+
+fit_glinternet_cv <- function(X_train, y_train, nFolds, numCores) {
+    
+    num_cols  <- ncol(X_train)
+    numLevels <- c(1, 1, 2, 2, rep(1, num_cols - 4))
+    
+    interactionCandidates=c(1,2,3,4)
+    
+    cv_fit <- glinternet.cv(
+        X_train=X_train, 
+        y_train=y_train, 
+        numLevels=numLevels, 
+        nFolds=nFolds, 
+        family='binomial', 
+        interactionCandidates=interactionCandidates,
+        numCores=numCores)
+    
+    return (cv_fit)
+    
+}
+
+fit_l1_log_reg <- function(X_train, y_train, nFolds){
+        
+    X_train_matrix <- as.matrix(X_train)
+        
+    cv_fit <- cv.glmnet(
+        X_train_matrix, y_train, 
+        family = "binomial",
+        alpha = 1, 
+        nfolds = nFolds)    
+}   
+        
