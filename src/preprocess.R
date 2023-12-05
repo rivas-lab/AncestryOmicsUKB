@@ -76,7 +76,7 @@ preprocess_data <- function(populations, disease, pheno, meta, prs, use_prs, dem
     X_test  <- X_test %>% mutate(across(where(is.numeric), ~ifelse(is.na(.), mean(., na.rm = TRUE), .)))
 
     y_train <- y_train - 1
-    y_test  <- y_test - 1
+    y_test  <- y_test  - 1
     
     print('Summary of population in X_train')
     print(table(X_train$population))

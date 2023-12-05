@@ -2,12 +2,12 @@ library(optparse)
 library(data.table)
 library(glmnet)  # Load glmnet package
 library(glinternet)  # Load glinternet package
-library(pROC)  # Load pROC package for AUC computation
 
 source('src/sampling.R')
 source('src/constants.R')
 source('src/statistics.R')
 source('src/preprocess.R')
+source('src/evaluate.R')
 source('src/fit.R')
 
 set.seed(1001)
@@ -41,7 +41,7 @@ model_paths <- get_model_paths(base_model_dir_path)
 
 disease_codes <- unique(sapply(lapply(model_paths, extract_details), `[[`, "disease_code"))
 
-model_types <- c("glinternet", "l1_log_reg")
+model_types <- c("glinternet", "l1_log_reg", "pretrained_lasso")
 splits <- c("WB_only", "WB_SA", "SA")
 
 auc_scores <- matrix(NA, nrow = length(model_types) * length(splits), ncol = length(disease_codes))
@@ -51,20 +51,6 @@ colnames(auc_scores) <- disease_codes
 meta  <- fread('data/meta.csv')
 prs   <- fread('data/prs.csv')
 pheno <- fread('data/pheno.csv')
-
-compute_auc_for_model <- function(model, preprocessed_data) {
-    
-    model_type <- class(model)[1]
-    if (model_type == "glmnet" || model_type == 'cv.glmnet') {
-        predictions <- predict(model, newx = as.matrix(preprocessed_data$X_test), type = "response")
-    } else if (model_type == "glinternet" || model_type == 'glinternet.cv') {
-        predictions <- as.vector(predict(model, preprocessed_data$X_test, type = "response"))
-    } else {
-        stop("Unsupported model type: ", model_type)
-    }
-    roc_curve <- roc(preprocessed_data$y_test, predictions)
-    return(auc(roc_curve))
-}
 
 # Evaluate models and store AUC scores
 for (path in model_paths) {
@@ -83,8 +69,11 @@ for (path in model_paths) {
       list('white_british', 's_asian'), details$disease_code, prepared_data$pheno,
       prepared_data$meta, prepared_data$prs, use_prs=TRUE, prepared_data$demo, use_demo=TRUE, only_wb_in_train=TRUE)
     
+    sx = apply(preprocessed_data$X_train, 2, sd)
+    cv_fit$sx = sx
+      
     print('Calling AUC function')
-    auc_score <- compute_auc_for_model(cv_fit, preprocessed_data)
+    auc_score <- compute_auc_for_model(cv_fit, preprocessed_data, details$model_type)
     auc_scores[row_name, details$disease_code] <- auc_score
   }
 }

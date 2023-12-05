@@ -10,7 +10,7 @@ set.seed(1001)
 
 option_list <- list(
     make_option(c("-m", "--model"), type="character", default="l1_log_reg", 
-                help="Model desired: glinternet or l1_log_reg", metavar="character"),
+                help="Model desired: glinternet, l1_log_reg or pretrained_lasso", metavar="character"),
     make_option(c("-w", "--only_wb_in_train"), type="logical", default=FALSE, 
                 help="Only include White British in training: TRUE or FALSE", metavar="logical"),
     make_option(c("-f", "--folder"), type="character", default="SA",
@@ -24,7 +24,7 @@ model_desired    <- args$model
 only_wb_in_train <- args$only_wb_in_train
 folder           <- args$folder
 
-populations <- list('s_asian')
+populations <- list('white_british', 's_asian')
 
 model_dir_path <- paste0('models/', paste0(model_desired, '/'), folder)
 
