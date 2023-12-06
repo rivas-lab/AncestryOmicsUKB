@@ -54,8 +54,8 @@ fit_glinternet_cv <- function(X_train, y_train, nFolds, numCores) {
     interactionCandidates=c(1,2,3,4)
     
     cv_fit <- glinternet.cv(
-        X_train=X_train, 
-        y_train=y_train, 
+        X=X_train, 
+        Y=y_train, 
         numLevels=numLevels, 
         nFolds=nFolds, 
         family='binomial', 
@@ -121,7 +121,7 @@ fit_pretrained_lasso <- function(X_train, y_train, nfolds){
         X_train,y_train,weights=wt,standardize=FALSE,foldid=foldid,
         family="binomial",trace.it=TRUE, parallel=TRUE, keep=TRUE)
     
-    lamhat  = cv_fit_pan_ethnicity$lambda.1se
+    lamhat  = cv_fit_pan_ethnicity$lambda.min
     bhatpan = as.numeric(coef(cv_fit_pan_ethnicity, s=lamhat, exact=FALSE))
     supp3   = which(bhatpan[2:(p + 1)]!=0)
     print('Fitted pan-ethnicity model')

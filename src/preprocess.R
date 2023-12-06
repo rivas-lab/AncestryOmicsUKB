@@ -59,7 +59,8 @@ preprocess_data <- function(populations, disease, pheno, meta, prs, use_prs, dem
 
     X$population <- ifelse(X$population == "white_british", 0, 1)
         
-    if (only_wb_in_train) {
+    if (only_ancestry_in_train) {
+        print('Only ancestry in train.')
         y_train <- subset(y, final_split %in% c('train', 'val') & population == populations[2])[[disease]]
         X_train <- subset(X, final_split %in% c('train', 'val') & population == 1)
     } else {
