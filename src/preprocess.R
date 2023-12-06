@@ -29,12 +29,14 @@ prepare_data <- function(meta, prs, pheno) {
     return(list(meta = meta, pheno = pheno, demo = demo, prs = prs))
 }
 
-preprocess_data <- function(populations, disease, pheno, meta, prs, use_prs, demo, use_demo, only_wb_in_train) {
+preprocess_data <- function(populations, disease, pheno, meta, prs, use_prs, demo, use_demo, only_ancestry_in_train) {
     
     set.seed(123)
 
     y <- subset(pheno, population %in% populations)
     X <- subset(meta, population %in% populations)
+    
+    print(table(X$population))
     
     # Add PRS scores column to the X dataframe
     if (use_prs == TRUE){
@@ -55,17 +57,17 @@ preprocess_data <- function(populations, disease, pheno, meta, prs, use_prs, dem
     y <- y[valid_y_indices,]
     X <- X[valid_y_indices,]
 
-    X$population <- ifelse(X$population == "white_british", 0, ifelse(X$population == "s_asian", 1, NA))
+    X$population <- ifelse(X$population == "white_british", 0, 1)
         
     if (only_wb_in_train) {
-        y_train <- subset(y, final_split %in% c('train', 'val') & population == 'white_british')[[disease]]
-        X_train <- subset(X, final_split %in% c('train', 'val') & population == 0)
+        y_train <- subset(y, final_split %in% c('train', 'val') & population == populations[2])[[disease]]
+        X_train <- subset(X, final_split %in% c('train', 'val') & population == 1)
     } else {
         y_train <- subset(y, final_split %in% c('train', 'val'))[[disease]]
         X_train <- subset(X, final_split %in% c('train', 'val'))
     }
 
-    y_test <- subset(y, final_split == 'test' & population == 's_asian')[[disease]]
+    y_test <- subset(y, final_split == 'test' & population == populations[2])[[disease]]
     X_test <- subset(X, final_split == 'test' & population == 1)
     
     X_train$final_split <- NULL
@@ -92,7 +94,7 @@ print_train_stats <- function(X_train, y_train) {
     combined_df          <- cbind(X_train, data.frame(y_train = y_train))
     
     combined_df$population <- ifelse(combined_df$population == 0, "WB", 
-                                     ifelse(combined_df$population == 1, "SA", NA))
+                                     ifelse(combined_df$population == 1, populations[2], NA))
 
     combined_df$combined <- paste(combined_df$population, combined_df$y_train, sep = "-")
     value_counts <- table(combined_df$combined)

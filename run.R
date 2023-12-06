@@ -11,22 +11,25 @@ set.seed(1001)
 option_list <- list(
     make_option(c("-m", "--model"), type="character", default="l1_log_reg", 
                 help="Model desired: glinternet, l1_log_reg or pretrained_lasso", metavar="character"),
-    make_option(c("-w", "--only_wb_in_train"), type="logical", default=FALSE, 
-                help="Only include White British in training: TRUE or FALSE", metavar="logical"),
+    make_option(c("-w", "--only_ancestry_in_train"), type="logical", default=FALSE, 
+                help="Only include Ancestry people in training: TRUE or FALSE", metavar="logical"),
     make_option(c("-f", "--folder"), type="character", default="SA",
-                help="Folder name for saving models", metavar="character")
+                help="Folder name for saving models", metavar="character"),
+    make_option(c("-a", "--ancestry"), type="character", default="AF",
+                help="Ancestry group to include in the model", metavar="character")  
 )
 
 parser <- OptionParser(option_list=option_list)
-args <- parse_args(parser)
+args   <- parse_args(parser)
 
-model_desired    <- args$model
-only_wb_in_train <- args$only_wb_in_train
-folder           <- args$folder
+model_desired          <- args$model
+only_ancestry_in_train <- args$only_ancestry_in_train
+folder                 <- args$folder
+ancestry               <- args$ancestry  
 
-populations <- list('white_british', 's_asian')
+populations <- c('white_british', ANCESTRY_LIST[ancestry])
 
-model_dir_path <- paste0('models/', paste0(model_desired, '/'), folder)
+model_dir_path <- paste0('models/', ancestry, '/', model_desired, '/', folder, '/')
 
 print(paste0('Model dir path: ', model_dir_path))
 
@@ -51,7 +54,7 @@ for (disease in DISEASE_CODES) {
         prepared_data$pheno, prepared_data$meta, 
         prepared_data$prs, use_prs=TRUE, 
         prepared_data$demo, use_demo=TRUE,
-        only_wb_in_train=only_wb_in_train
+        only_ancestry_in_train=only_ancestry_in_train
     )
     
     system.time({cv_fit <- fit_models(
