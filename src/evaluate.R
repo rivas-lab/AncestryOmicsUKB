@@ -31,5 +31,7 @@ compute_auc_for_model <- function(model, preprocessed_data, model_type) {
         stop("Unsupported model type: ", model_type)
     }
     roc_curve <- roc(preprocessed_data$y_test, predictions)
+    print('ROC-AUC:')
+    print(auc(roc_curve))
     return(auc(roc_curve))
 }

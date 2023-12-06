@@ -63,22 +63,19 @@ for (path in model_paths) {
   print(paste("Row Name:", row_name))
 
   if (row_name %in% rownames(auc_scores) && details$disease_code %in% colnames(auc_scores)) {
+    print(details)
     cv_fit <- readRDS(path)
     prepared_data <- prepare_data(meta, prs, pheno)
     preprocessed_data <- preprocess_data(
       list('white_british', 's_asian'), details$disease_code, prepared_data$pheno,
-      prepared_data$meta, prepared_data$prs, use_prs=TRUE, prepared_data$demo, use_demo=TRUE, only_wb_in_train=TRUE)
-    
-    sx = apply(preprocessed_data$X_train, 2, sd)
-    cv_fit$sx = sx
-      
+      prepared_data$meta, prepared_data$prs, use_prs=TRUE, prepared_data$demo, use_demo=TRUE, only_wb_in_train=FALSE)
+
     print('Calling AUC function')
     auc_score <- compute_auc_for_model(cv_fit, preprocessed_data, details$model_type)
     auc_scores[row_name, details$disease_code] <- auc_score
   }
 }
 
-# Save AUC scores to CSV file
 write.csv(auc_scores, file = "scores/auc_scores.csv", row.names = TRUE)
 
 print("AUC scores saved to auc_scores.csv")

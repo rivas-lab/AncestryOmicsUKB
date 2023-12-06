@@ -86,18 +86,26 @@ fit_pretrained_lasso <- function(X_train, y_train, nfolds){
     n = nrow(X_train)
     p = ncol(X_train)
     k = 2 # of classes
+    
+    X_train <- as.matrix(X_train, nrow = nrow(X_train))
 
     race = X_train[,4]
     print('Race table')
     print(table(race))
     
-    X_train <- as.matrix(X_train, nrow = nrow(X_train))
-    foldid  <- create_stratified_folds(X_train, 4, nfolds)
+    #foldid  <- create_stratified_folds(X_train, 4, nfolds)
     print('Created folds for the pan-ethnicity model')
     
-    foldid2 <- create_regular_folds(X_train[X_train[, 4] == 1, ], nfolds)
+    #foldid2 <- create_regular_folds(X_train[X_train[, 4] == 1, ], nfolds)
     print('Created folds for other models')
+    folds = balanced.folds(race, nfolds=nfolds) #define CV folds for overall training set
+    foldid=rep(NA,n)
+    for(kk in 1:nfolds) foldid[folds[[kk]]]=kk 
 
+    folds2=balanced.folds(y_train[race==1],nfolds=nfolds) #define CV folds for SA part of training set
+    foldid2=rep(NA,sum(race==1))
+    for(kk in 1:nfolds) foldid2[folds2[[kk]]]=kk 
+    
     ## standardize
     mx = colMeans(X_train)
     sx = apply(X_train,2,sd)
