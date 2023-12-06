@@ -1,4 +1,4 @@
-# Multiomics disease prediction for non-White British in UK Biobank
+# Multiomics disease prediction for diverse ancestries in UK Biobank
 
 ![Biobank Image](https://github.com/rivas-lab/multiomics/raw/main/images/biobank.jpg)
 
