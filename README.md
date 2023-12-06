@@ -17,15 +17,15 @@ To use this pipeline, clone the repository and ensure you have the required R pa
 
 ### Installation
 Clone the repository to your local machine:
-\```bash
+```bash
 git clone [repository-url]
-\```
+```
 
 ### Usage
 Run the script from the command line with specified options:
-\```R
+```R
 Rscript [script-name].R --model [model-name] --only_ancestry_in_train [TRUE/FALSE] --folder [folder-name] --ancestry [ancestry-group]
-\```
+```
 
 #### Options:
 - `-m` or `--model`: Model to use (`glinternet`, `l1_log_reg`, `pretrained_lasso`).
