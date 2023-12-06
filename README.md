@@ -1,4 +1,4 @@
-# Predictive Modeling Pipeline for Disease Risk Assessment
+# Multiomics disease prediction for non-White British in UK Biobank
 
 ![Biobank Image](https://github.com/rivas-lab/multiomics/raw/main/images/biobank.jpg)
 
