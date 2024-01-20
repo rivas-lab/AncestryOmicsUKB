@@ -36,7 +36,7 @@ fit_models <- function(model_dir_path, disease, preprocessed_data, update_models
         cv_fit <- fit_l1_log_reg(X_train, y_train, 3)    
     } else if (model_desired == 'pretrained_lasso') {   
         print('Desired model to fit: Pretrained LASSO')
-        cv_fit <- fit_pretrained_lasso(X_train, y_train, nfolds=5)    
+        cv_fit <- fit_pretrained_lasso(X_train, y_train, nfolds=3)    
     }
 
     cat('Finished fitting model\n\n')
