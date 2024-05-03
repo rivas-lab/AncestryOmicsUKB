@@ -1,4 +1,4 @@
-# Multiomics disease prediction for diverse ancestries in UK Biobank
+# Using Pre-training and Interaction Modeling for ancestry-specific disease prediction using multiomics data from the UK Biobank
 
 ![Biobank Image](https://github.com/rivas-lab/multiomics/raw/main/images/biobank.jpg)
 
