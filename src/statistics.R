@@ -42,6 +42,22 @@ compute_and_print_roc_auc <- function(cv_fit, preprocessed_data) {
     return(auc_score)
 }
 
+compute_roc_curve <- function(cv_fit, preprocessed_data) {
+
+    X_test <- preprocessed_data$X_test
+    y_test <- preprocessed_data$y_test
+
+    predictions <- as.vector(predict(cv_fit, X_test, type = "response"))
+
+    roc_curve <- suppressMessages(roc(y_test, predictions, quietly = TRUE))
+    cat('\nComputed ROC curve: ')
+    cat('\n\n####################################################################################################')
+    cat('\n####################################################################################################\n')
+
+    # Return the AUC score
+    return(roc_curve)
+}
+
 cases_summary <- function(pheno) {
 
     results <- list()

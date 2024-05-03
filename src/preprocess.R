@@ -29,76 +29,74 @@ prepare_data <- function(meta, prs, pheno) {
     return(list(meta = meta, pheno = pheno, demo = demo, prs = prs))
 }
 
-preprocess_data <- function(populations, disease, pheno, meta, prs, use_prs, demo, use_demo, only_ancestry_in_train) {
+preprocess_data <- function(populations, disease, pheno, meta, prs, demo, model) {
     
     set.seed(123)
 
     y <- subset(pheno, population %in% populations)
-    X <- subset(meta, population %in% populations)
+    X <- subset(meta,  population %in% populations)
     
+    print('Pop of X before encoding before train-test split')
     print(table(X$population))
     
-    # Add PRS scores column to the X dataframe
-    if (use_prs == TRUE){
-        prs_column <- paste0('PRS_', disease)
-        prs_subset <- subset(prs, population %in% populations, select = prs_column)
-        X          <- cbind(prs_subset, X)
-    }
+    prs_column <- paste0('PRS_', disease)
+    prs_subset <- subset(prs, population %in% populations, select = prs_column)
+    X          <- cbind(prs_subset, X)
     
-    # Add demographics columns to the X dataframe
-    if (use_demo == TRUE) {
-        demo_subset            <- subset(demo, population %in% populations)
-        demo_subset$population <- NULL 
-        X                      <- cbind(X, demo_subset)
-    }
+    demo_subset            <- subset(demo, population %in% populations)
+    demo_subset$population <- NULL 
+    X                      <- cbind(X, demo_subset)
     
     # Ensure y only contains 1 or 2, and filter X accordingly
     valid_y_indices <- which(y[[disease]] %in% c(1, 2))
     y <- y[valid_y_indices,]
     X <- X[valid_y_indices,]
-
-    X$population <- ifelse(X$population == "white_british", 0, 1)
-        
-    if (only_ancestry_in_train) {
-        print('Only ancestry in train.')
-        y_train <- subset(y, final_split %in% c('train', 'val') & population == populations[2])[[disease]]
-        X_train <- subset(X, final_split %in% c('train', 'val') & population == 1)
-    } else {
-        y_train <- subset(y, final_split %in% c('train', 'val'))[[disease]]
-        X_train <- subset(X, final_split %in% c('train', 'val'))
+    
+    positions    <- match(X$population, ANCESTRY_LIST)
+    X$population <- as.numeric(ANCESTRY_CODE[names(ANCESTRY_LIST)[positions]])
+    
+    if (model == 'pretrained_lasso') {
+        X$population <- ifelse(X$population != 1, 2, X$population)
     }
-
-    y_test <- subset(y, final_split == 'test' & population == populations[2])[[disease]]
-    X_test <- subset(X, final_split == 'test' & population == 1)
+    print('Pop of X after encoding before train-test split')
+    print(table(X$population), useNA = "always")
     
-    X_train$final_split <- NULL
-    X_test$final_split  <- NULL
+    y_train <- subset(y, final_split %in% c('train', 'val'))[[disease]]
+    X_train <- subset(X, final_split %in% c('train', 'val'))
 
-    # Impute missing numeric values in training and testing sets
-    X_train <- X_train %>% mutate(across(where(is.numeric), ~ifelse(is.na(.), mean(., na.rm = TRUE), .)))
-    X_test  <- X_test %>% mutate(across(where(is.numeric), ~ifelse(is.na(.), mean(., na.rm = TRUE), .)))
-
-    y_train <- y_train - 1
-    y_test  <- y_test  - 1
-    
-    print('Summary of population in X_train')
+    print('Pop of X after encoding after train-test split')
     print(table(X_train$population))
     
-    print('Summary of cases')
-    print_train_stats(X_train, y_train)
+    X_train$final_split <- NULL
 
-    return(list(X_train = X_train, y_train = y_train, X_test = X_test, y_test = y_test))
+    X_train <- X_train %>% 
+  mutate(across(.cols = -c(population, sex),
+                .fns = ~ifelse(is.na(.), mean(., na.rm = TRUE), .)))
+    
+    X_train <- replace_na_columns_with_zeros(X_train)
+    y_train <- y_train - 1
+
+    return(list(X_train = X_train, y_train = y_train))
 }
 
-print_train_stats <- function(X_train, y_train) {
+print_train_stats <- function(X_train, y_train, populations) {
     
     combined_df          <- cbind(X_train, data.frame(y_train = y_train))
-    
-    combined_df$population <- ifelse(combined_df$population == 0, "WB", 
-                                     ifelse(combined_df$population == 1, populations[2], NA))
 
     combined_df$combined <- paste(combined_df$population, combined_df$y_train, sep = "-")
     value_counts <- table(combined_df$combined)
     print(value_counts)
     
+}
+
+replace_na_columns_with_zeros <- function(dt) {
+  for (column in names(dt)) {
+    if (all(is.na(dt[[column]]))) {
+      set(dt, j = column, value = 0)
+    }
+  }
+  if (any(sapply(dt, function(col) all(is.na(col))))) {
+    stop("There are still columns with only NAs")
+  }
+  return(dt)
 }

@@ -2,10 +2,9 @@ library(data.table)
 library(glinternet)
 library(glmnet)
 library(doMC)
+library(ptLasso)
 
-source('src/sampling.R')
-
-registerDoMC(cores = 5)
+registerDoMC(cores = 12)
 
 fit_models <- function(model_dir_path, disease, preprocessed_data, update_models, model_desired) {
 
@@ -19,12 +18,17 @@ fit_models <- function(model_dir_path, disease, preprocessed_data, update_models
 
     X_train <- preprocessed_data$X_train
     y_train <- preprocessed_data$y_train
-    X_val   <- preprocessed_data$X_val
-    y_val   <- preprocessed_data$y_val
 
-    if (any(is.na(y_train)) || any(is.na(X_train))) {
-        stop("NA values found in Y or X.")}
-    
+    if (any(is.na(y_train))) {
+        stop("NA values found in y.")}
+    if (any(is.na(X_train))) {
+    X_train <- as.data.frame(X_train)
+    print('NA columns')
+    na_columns <- colSums(is.na(X_train))
+    na_columns_names <- names(na_columns[na_columns > 0])
+    print(na_columns_names)
+        stop("NA values found in X.")}
+
     cat('Fitting model\n')
     flush.console()
     
@@ -36,7 +40,7 @@ fit_models <- function(model_dir_path, disease, preprocessed_data, update_models
         cv_fit <- fit_l1_log_reg(X_train, y_train, 3)    
     } else if (model_desired == 'pretrained_lasso') {   
         print('Desired model to fit: Pretrained LASSO')
-        cv_fit <- fit_pretrained_lasso(X_train, y_train, nfolds=5)    
+        cv_fit <- fit_pretrained_lasso(X_train, y_train, nfolds=3)    
     }
 
     cat('Finished fitting model\n\n')
@@ -80,119 +84,15 @@ fit_l1_log_reg <- function(X_train, y_train, nFolds){
     return (cv_fit)
 }   
 
-fit_pretrained_lasso <- function(X_train, y_train, nfolds){
-    
-    set.seed(1234)
-    
-    n = nrow(X_train)
-    p = ncol(X_train)
-    k = 2 # of classes
+fit_pretrained_lasso <- function(X_train, y_train, nfolds) {
     
     X_train <- as.matrix(X_train, nrow = nrow(X_train))
-
-    race = X_train[,4]
-    print('Race table')
-    print(table(race))
     
-    folds = balanced.folds(race, nfolds=nfolds) #define CV folds for overall training set
-    foldid=rep(NA,n)
-    for(kk in 1:nfolds) foldid[folds[[kk]]]=kk 
+    cv_fit = cv.ptLasso(
+        X_train[, -4], y_train, groups = X_train[,4],
+        family="binomial",type.measure="auc",
+        foldid=NULL, nfolds=nfolds, overall.lambda = "lambda.min",
+        parallel=TRUE,verbose=TRUE, trace.it=TRUE)
 
-    folds2=balanced.folds(y_train[race==1],nfolds=nfolds) #define CV folds for SA part of training set
-    foldid2=rep(NA,sum(race==1))
-    for(kk in 1:nfolds) foldid2[folds2[[kk]]]=kk 
-    
-    ## standardize
-    mx = colMeans(X_train)
-    sx = apply(X_train,2,sd)
-    
-    X_train = scale(X_train, mx, sx)
-
-    # upweight SA pop
-    wt = rep(NA,n)
-    tt = table(y_train)/n
-    
-    wt[y_train==0] = tt[2]
-    wt[y_train==1] = tt[1]
-    
-    print('Fitting pan-ethnicity model')
-    # Fit pan-ethnicity model
-    cv_fit_pan_ethnicity <-cv.glmnet(
-        X_train,y_train,weights=wt,standardize=FALSE,foldid=foldid,
-        family="binomial",trace.it=TRUE, parallel=TRUE, keep=TRUE)
-    
-    lamhat  = cv_fit_pan_ethnicity$lambda.min
-    bhatpan = as.numeric(coef(cv_fit_pan_ethnicity, s=lamhat, exact=FALSE))
-    supp3   = which(bhatpan[2:(p + 1)]!=0)
-    print('Fitted pan-ethnicity model')
-    
-    # Fit individual model
-    sa = race == 1
-    
-    print('Fitting individual model')
-
-    cv_fit_individual = cv.glmnet(
-        X_train[sa,],y_train[sa],family="binomial",
-        trace.it=T, standardize=FALSE, 
-        foldid=foldid2,parallel=TRUE) 
-    
-    print('Fitted individual model')
-
-    res2 = NULL
-    supp = NULL
-    eps = 1e-8
-   
-    best_roc_auc <- 0
-    best_alpha <- NULL
-    best_model <- NULL
-
-    alphalist = seq(eps, 1, length.out = 10)
-    
-    print('Fitting pretrained LASSO model')
-
-    for(alpha in alphalist){
-        cat(c("alpha=", alpha), fill = TRUE)
-
-        offset = (1 - alpha) * cv_fit_pan_ethnicity$fit.preval[, which(cv_fit_pan_ethnicity$cvm == min(cv_fit_pan_ethnicity$cvm))]  # prevalidated offset
-
-        fac = rep(1 / alpha, p)
-        fac[supp3] = 1
-        pf = fac
-
-        cv_fit_pretrained_lasso = cv.glmnet(
-            X_train[sa, ], y_train[sa], family = "binomial", standardize = FALSE,
-            offset = offset[sa], trace.it = TRUE, penalty.factor = pf, 
-            foldid = foldid2, parallel = TRUE)
-        
-        lamhat4 = cv_fit_pretrained_lasso$lambda.min
-        
-        offset  = (1 - alpha) * predict(cv_fit_pan_ethnicity, X_train, s = lamhat)
-        phatpre = predict(cv_fit_pretrained_lasso, X_train, s = lamhat4, newoffset = offset,type = "response")
-
-        roc_curve <- roc(y_train, phatpre)
-        roc_auc <- auc(roc_curve)
-        
-        print('ROC-AUC')
-        print(roc_auc)
-
-        if (roc_auc > best_roc_auc) {
-            best_roc_auc <- roc_auc
-            best_alpha   <- alpha
-            best_model   <- cv_fit_pretrained_lasso
-            best_lamhat  <- lamhat
-        }
-    }
-    
-    print('Fitted pretrained LASSO model')
-
-    # Store extra variables needed for prediction on test set
-    best_model$best_alpha = best_alpha
-    best_model$lamhat     = lamhat
-    best_model$mx         = mx
-    best_model$sx         = sx
-    
-    best_model$cv_fit_pan_ethnicity = cv_fit_pan_ethnicity
-        
-    return (best_model)
-     
-}    
+    return (cv_fit)
+}
