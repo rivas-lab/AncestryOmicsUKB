@@ -15,5 +15,5 @@ To use this pipeline, clone the repository and ensure you have the required R pa
 ### Installation
 Clone the repository to your local machine:
 ```bash
-git clone [repository-url]
+git clone [[repository-url]](https://github.com/rivas-lab/AncestryOmicsUKB.git)
 ```
