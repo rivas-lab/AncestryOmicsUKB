@@ -2,13 +2,8 @@
 
 ![Biobank Image](https://github.com/rivas-lab/multiomics/raw/main/images/diagram_ukb.jpg)
 
-## Overview
-This repository contains a comprehensive R script designed for predictive modeling in disease risk assessment. It integrates various data sources, including metabolomics, PRS (Polygenic Risk Scores), and phenotype data, to fit predictive models for different diseases. The script offers flexibility in model selection and the inclusion of specific population groups in the training process.
-
-## Features
-- **Model Selection**: Choose from models `glinternet`, `l1_log_reg`, or `pretrained_lasso`.
-- **Population Specific Training**: Option to include only White British, White British and an ancestry in training data.
-- **Data Integration**: Combines metabolomics, PRS, and phenotype data from the UK Biobank.
+## Abstract
+Recent genome-wide association studies (GWAS) have uncovered the genetic basis of complex traits, but show an under-representation of non-European descent individuals, underscoring a critical gap in genetic research. Here, we assess whether we can improve disease prediction across diverse ancestries using multiomic data. We evaluate the performance of Group-LASSO INTERaction-NET (glinternet) and pretrained lasso in disease prediction focusing on diverse ancestries in the UK Biobank. Models were trained on data from White British and other ancestries and validated across a cohort of over 96,000 individuals for 8 diseases. Out of 96 models trained, we report 16 with statistically significant incremental predictive performance in terms of ROC-AUC scores (p-value < 0.05), found for diabetes, arthritis, gall stones, cystitis, asthma and osteoarthritis. For the interaction and pretrained models that outperformed the baseline, the PRS score was the primary driver behind prediction. Our findings indicate that both interaction terms and pre-training can enhance prediction accuracy but for a limited set of diseases and moderate improvements in accuracy.
 
 ## Getting Started
 To use this pipeline, clone the repository and ensure you have the required R packages installed.
@@ -22,23 +17,3 @@ Clone the repository to your local machine:
 ```bash
 git clone [repository-url]
 ```
-
-### Usage
-Run the script from the command line with specified options:
-```R
-Rscript [script-name].R --model [model-name] --only_ancestry_in_train [TRUE/FALSE] --folder [folder-name] --ancestry [ancestry-group]
-```
-
-#### Options:
-- `-m` or `--model`: Model to use (`glinternet`, `l1_log_reg`, `pretrained_lasso`).
-- `-w` or `--only_ancestry_in_train`: Include only a specific ancestry group in training (TRUE or FALSE).
-- `-f` or `--folder`: Folder name for saving models.
-- `-a` or `--ancestry`: Ancestry group to include in the model.
-
-## Data Processing Steps
-1. **Loading Datasets**: Loads metabolomics, PRS, and phenotype data.
-2. **Data Preparation and Preprocessing**: Prepares and preprocesses the data for the selected disease codes and populations.
-3. **Model Fitting**: Fits models using cross-validation and stores them in a structured directory.
-
-## Output
-The script outputs models for each disease, stored in the specified directory structure.
