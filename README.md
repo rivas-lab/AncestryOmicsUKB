@@ -1,5 +1,8 @@
 # Using Pre-training and Interaction Modeling for ancestry-specific disease prediction using multiomics data from the UK Biobank
 
+![GitHub](https://img.shields.io/github/license/rivas-lab/AncestryOmicsUKB)
+![Github](https://img.shields.io/badge/status-under_development-yellow)
+
 ![Biobank Image](https://github.com/rivas-lab/multiomics/raw/main/images/diagram_ukb.jpg)
 
 ## Abstract
