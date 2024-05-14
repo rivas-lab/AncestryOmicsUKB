@@ -1,6 +1,6 @@
 # Using Pre-training and Interaction Modeling for ancestry-specific disease prediction using multiomics data from the UK Biobank
 
-![Biobank Image](https://github.com/rivas-lab/multiomics/raw/main/images/diagram_ukb.png)
+![Biobank Image](https://github.com/rivas-lab/multiomics/raw/main/images/diagram_ukb.jpg)
 
 ## Overview
 This repository contains a comprehensive R script designed for predictive modeling in disease risk assessment. It integrates various data sources, including metabolomics, PRS (Polygenic Risk Scores), and phenotype data, to fit predictive models for different diseases. The script offers flexibility in model selection and the inclusion of specific population groups in the training process.
