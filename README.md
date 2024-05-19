@@ -1,7 +1,5 @@
 # Using Pre-training and Interaction Modeling for ancestry-specific disease prediction using multiomics data from the UK Biobank
 
-Supervised by Manuel A. Rivas. Under review at PLOS Genetics.
-
 ![GitHub](https://img.shields.io/github/license/rivas-lab/AncestryOmicsUKB)
 ![Github](https://img.shields.io/badge/status-under_development-yellow)
 
