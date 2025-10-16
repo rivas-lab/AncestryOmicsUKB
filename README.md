@@ -1,12 +1,10 @@
+# Multiomics disease prediction for diverse ancestries in UK Biobank
+
 ## Links
 
 - [AncestryOmicsUKB Dataset on Hugging Face](https://huggingface.co/datasets/tlemenestrel/AncestryOmicsUKB/tree/main)  
 - [Paper on arXiv](https://arxiv.org/abs/2404.17626)  
 - [Zenodo Record](https://zenodo.org/records/16925478)
-
-# Multiomics disease prediction for diverse ancestries in UK Biobank
-
-![Biobank Image](https://github.com/rivas-lab/multiomics/raw/main/images/biobank.jpg)
 
 ## Overview
 This repository contains a comprehensive R script designed for predictive modeling in disease risk assessment. It integrates various data sources, including metabolomics, PRS (Polygenic Risk Scores), and phenotype data, to fit predictive models for different diseases. The script offers flexibility in model selection and the inclusion of specific population groups in the training process.
